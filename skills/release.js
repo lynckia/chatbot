@@ -57,7 +57,7 @@ module.exports = function(controller) {
                     }});
     };
   
-    var createRelease = function(bot, message, mode, name, commit) {
+    var createRelease = function(bot, message, mode, name, commit='') {
       var url = 'https://circleci.com/api/v1.1/project/github/lynckia/licode/tree/master?circle-token=' + process.env.circleCi_token;
       request({url:url, json:true, method: 'POST', form: {'build_parameters[RELEASE_VERSION]':name,'build_parameters[CIRCLE_JOB]':mode,'revision':commit}}).then(function(body) {
         if (body) {
@@ -118,12 +118,11 @@ module.exports = function(controller) {
   
     controller.hears(['create release (v.*)'], 'direct_message,direct_mention', function(bot, message) {
       var name = message.match[1];
-      var commit = message.match[2];
-      createRelease(bot, message, 'prerelease', name, commit);
+      createRelease(bot, message, 'release', name);
     });
   
     controller.hears(['git log'], 'direct_message,direct_mention', function(bot, message) {
-      var url = 'https://api.github.com/repos/jcague/licode/commits';
+      var url = 'https://api.github.com/repos/lynckia/licode/commits';
       github(url, 'get').then(function(body) {
         var text = '';
         for (var commit of body) {
@@ -138,20 +137,6 @@ module.exports = function(controller) {
                   'color': '#7CD197'
             }
           ],
-          };
-
-        bot.reply(message, reply_with_attachments);
-      });
-    });
-  
-    controller.hears(['delete release (.*)'], 'direct_message,direct_mention', function(bot, message) {
-      var name = message.match[1];
-      var url = 'https://api.github.com/repos/jcague/licode/releases/tags/' + name;
-      github(url, 'get').then(function(body) {
-        return github(body.url, 'delete');
-      }).then(function(info) {
-        var reply_with_attachments = {
-          'text': 'Release deleted',
           };
 
         bot.reply(message, reply_with_attachments);
